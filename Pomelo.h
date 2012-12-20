@@ -37,5 +37,4 @@ typedef void(^PomeloCallback)(id callback);
 
 - (void) requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
 - (void) notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
-//- (void) onRoute:(NSString *)route andCallback:(id)cb;
 @end
