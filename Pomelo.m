@@ -7,12 +7,12 @@
 //
 
 #import "Pomelo.h"
+#import "PomeloProtocol.h"
 #import "SocketIOJSONSerialization.h"
 
-NSString* const PomeloException = @"PomeloException";
+// NSString* const PomeloException = @"PomeloException";
 
 @interface Pomelo (Private)
-- (NSString *)encodeWithId:(NSInteger)id andRoute:(NSString *)route andBody:(NSString *)body;
 - (void)sendMessageWithReqId:(NSInteger)reqId andRoute:(NSString *)route andMsg:(NSDictionary *)msg;
 - (void)processMessage:(NSDictionary *)msg;
 - (void)processMessageBatch:(NSArray *)msgs;
@@ -31,27 +31,6 @@ NSString* const PomeloException = @"PomeloException";
     }
     return self;
     
-}
-
-- (NSString *)encodeWithId:(NSInteger)id andRoute:(NSString *)route andBody:(NSString *)body
-{
-    if ([route length] > 255) {
-        [NSException raise:PomeloException format:@"Pomelo: route length is too long!"];
-        return nil;
-    }
-                  
-    NSString *msg = [NSString stringWithFormat:@"%C%C%C%C%C%@%@",
-                            (id >> 24) & 0xFF,
-                            (id >> 16) & 0xFF,
-                            (id >> 8) & 0xFF,
-                            id & 0xFF,
-                            [route length],
-                            route,
-                            body];
-    
-//    NSLog(@"send msg,%d, %d, %@",[route length] + [body length],[msg length],msg);
-
-    return msg;
 }
 
 - (void)connectToHost:(NSString *)host onPort:(NSInteger)port
@@ -81,7 +60,7 @@ NSString* const PomeloException = @"PomeloException";
 - (void)sendMessageWithReqId:(NSInteger)reqId andRoute:(NSString *)route andMsg:(NSDictionary *)msg
 {
     NSString *msgStr = [SocketIOJSONSerialization JSONStringFromObject:msg error:nil];
-    [socketIO sendMessage:[self encodeWithId:reqId andRoute:route andBody:msgStr]];
+    [socketIO sendMessage:[PomeloProtocol encodeWithId:reqId andRoute:route andBody:msgStr]];
 }
 
 - (void)notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params
