@@ -1,16 +1,15 @@
 //
 //  Pomelo.m
-//  PomeloChat
+//  iOS client for Pomelo
 //
 //  Created by Johnny on 12-12-11.
-//  Copyright (c) 2012年 netease pomelo team. All rights reserved.
+//  Copyright (c) 2012 netease pomelo team. All rights reserved.
 //
 
 #import "Pomelo.h"
 #import "PomeloProtocol.h"
 #import "SocketIOJSONSerialization.h"
-
-// NSString* const PomeloException = @"PomeloException";
+#import "SocketIOPacket.h"
 
 @interface Pomelo (Private)
 - (void)sendMessageWithReqId:(NSInteger)reqId andRoute:(NSString *)route andMsg:(NSDictionary *)msg;
@@ -41,9 +40,14 @@
 {
     [socketIO connectToHost:host onPort:port withParams:params];
 }
-- (void)disconnect{
+- (void)disconnect
+{
     [socketIO disconnect];
 }
+
+# pragma mark -
+# pragma mark implement SocketIODelegate
+
 - (void) socketIODidConnect:(SocketIO *)socket
 {
     if ([_delegate respondsToSelector:@selector(PomeloDidConnect:)]) {
@@ -52,16 +56,28 @@
 }
 - (void) socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
 {
-    if ([_delegate respondsToSelector:@selector(PomeloDidDisconnect:)]) {
-        [_delegate PomeloDidDisconnect:self];
+    if ([_delegate respondsToSelector:@selector(PomeloDidDisconnect:withError:)]) {
+        [_delegate PomeloDidDisconnect:self withError:error];
     }
 }
 
-- (void)sendMessageWithReqId:(NSInteger)reqId andRoute:(NSString *)route andMsg:(NSDictionary *)msg
+- (void)socketIO:(SocketIO *)socket didReceiveMessage:(SocketIOPacket *)packet
 {
-    NSString *msgStr = [SocketIOJSONSerialization JSONStringFromObject:msg error:nil];
-    [socketIO sendMessage:[PomeloProtocol encodeWithId:reqId andRoute:route andBody:msgStr]];
+    id data = [packet dataAsJSON];
+    NSLog(@"receive, %@", data);
+    if ([_delegate respondsToSelector:@selector(Pomelo:didReceiveMessage:)]) {
+        [_delegate Pomelo:self didReceiveMessage:data];
+    }
+    
+    if ([data isKindOfClass:[NSArray class]]) {
+        [self processMessageBatch:data];
+    } else if ([data isKindOfClass:[NSDictionary class]]) {
+        [self processMessage:data];
+    }
 }
+
+# pragma mark -
+# pragma mark main api
 
 - (void)notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params
 {
@@ -81,19 +97,28 @@
 
 }
 
-- (void)socketIO:(SocketIO *)socket didReceiveMessage:(SocketIOPacket *)packet
+- (void)onRoute:(NSString *)route withCallback:(PomeloCallback)callback
 {
-    id data = [packet dataAsJSON];
-    NSLog(@"receive, %@", data);
-    if ([_delegate respondsToSelector:@selector(Pomelo:didReceiveMessage:)]) {
-        [_delegate Pomelo:self didReceiveMessage:data];
+    id array = [_callbacks objectForKey:route];
+    if (array == nil) {
+        array = [NSMutableArray arrayWithCapacity:1];
+        [_callbacks setObject:array forKey:route];
     }
-    
-    if ([data isKindOfClass:[NSArray class]]) {
-        [self processMessageBatch:data];
-    } else if ([data isKindOfClass:[NSDictionary class]]) {
-        [self processMessage:data];
-    }
+    [array addObject:[callback copy]];
+}
+
+- (void)offRoute:(NSString *)route
+{
+    [_callbacks removeObjectForKey:route];
+}
+
+# pragma mark -
+# pragma mark private methods
+
+- (void)sendMessageWithReqId:(NSInteger)reqId andRoute:(NSString *)route andMsg:(NSDictionary *)msg
+{
+    NSString *msgStr = [SocketIOJSONSerialization JSONStringFromObject:msg error:nil];
+    [socketIO sendMessage:[PomeloProtocol encodeWithId:reqId andRoute:route andBody:msgStr]];
 }
 
 - (void)processMessage:(NSDictionary *)msg
@@ -106,13 +131,14 @@
             callback([msg objectForKey:@"body"]);
             [_callbacks removeObjectForKey:key];
         }
-
     } else {
-        NSString *route = [NSString stringWithFormat:@"%@%@", [msg objectForKey:@"route"], @":"];
-        SEL sel = NSSelectorFromString(route);
-        if ([_delegate respondsToSelector: sel]) {
-            [_delegate performSelector:sel withObject:msg];
+        NSMutableArray *callbacks = [_callbacks objectForKey:[msg objectForKey:@"route"]];
+        if (callbacks != nil) {
+            for (PomeloCallback cb in callbacks)  {
+                cb(msg);
+            }
         }
+        
     }
 }
 
@@ -122,6 +148,8 @@
         [self processMessage:msg];
     }
 }
+
+# pragma mark -
 
 - (void)dealloc
 {

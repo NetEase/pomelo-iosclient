@@ -1,9 +1,9 @@
 //
 //  Pomelo.h
-//  PomeloChat
+//  iOS client for Pomelo
 //
 //  Created by Johnny on 12-12-11.
-//  Copyright (c) 2012年 netease pomelo team. All rights reserved.
+//  Copyright (c) 2012 netease pomelo team. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -15,9 +15,9 @@ typedef void(^PomeloCallback)(id callback);
 
 @protocol PomeloDelegate <NSObject>
 @optional
-- (void) PomeloDidConnect:(Pomelo *)pomelo;
-- (void) PomeloDidDisconnect:(Pomelo *)pomelo;
-- (void) Pomelo:(Pomelo *)pomelo didReceiveMessage:(NSArray *)message;
+- (void)PomeloDidConnect:(Pomelo *)pomelo;
+- (void)PomeloDidDisconnect:(Pomelo *)pomelo withError:(NSError *)error;
+- (void)Pomelo:(Pomelo *)pomelo didReceiveMessage:(NSArray *)message;
 @end
 
 @interface Pomelo : NSObject <SocketIODelegate>
@@ -30,11 +30,14 @@ typedef void(^PomeloCallback)(id callback);
     SocketIO *socketIO;
 }
 
-- (id) initWithDelegate:(id<PomeloDelegate>)delegate;
-- (void) connectToHost:(NSString *)host onPort:(NSInteger)port;
-- (void) connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params;
-- (void) disconnect;
+- (id)initWithDelegate:(id<PomeloDelegate>)delegate;
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port;
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params;
+- (void)disconnect;
 
-- (void) requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
-- (void) notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
+- (void)requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
+- (void)notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
+- (void)onRoute:(NSString *)route withCallback:(PomeloCallback)callback;
+- (void)offRoute:(NSString *)route;
+
 @end
