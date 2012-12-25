@@ -3,24 +3,26 @@
 The iOS client libary for [Pomelo](https://github.com/NetEase/pomelo)
 
 ##Dependencies
-* [socket.IO-objc](https://github.com/pkyeck/socket.IO-objc): A [Socket.IO](http://socket.io/) client for Objective-C, based on [SocketRocket](https://github.com/square/SocketRocket)
+* [socket.IO-objc](https://github.com/pkyeck/socket.IO-objc) (v0.3.0): A [Socket.IO](http://socket.io/) client for Objective-C, based on [SocketRocket](https://github.com/square/SocketRocket)
 * [SocketRocket](https://github.com/square/SocketRocket): Objective-C WebSocket Client.
 
 ##Installation
 1. make sure you have installed the dependencies
-2. then just add the `pomelo.m` and `pomelo.h` files to your project.
+2. then just add the `Pomelo.h`, `Pomelo.m`, `PomeloProtocol.h`, `pomeloProtocol.m` files to your project.
 
 ##Usage
 
 **Pomelo API**
 
 ```objective-c
-- (id) initWithDelegate:(id<PomeloDelegate>)delegate;
-- (void) connectToHost:(NSString *)host onPort:(NSInteger)port;
-- (void) connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params;
-- (void) disconnect;
-- (void) requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
-- (void) notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
+- (id)initWithDelegate:(id<PomeloDelegate>)delegate;
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port;
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params;
+- (void)disconnect;
+- (void)requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
+- (void)notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
+- (void)onRoute:(NSString *)route withCallback:(PomeloCallback)callback;
+- (void)offRoute:(NSString *)route;
 ```
 
 connect to the pomelo server
@@ -39,17 +41,15 @@ notify
 ```objective-c
 [pomelo notifyWithRoute:@"chat.chatHandler.send" andParams:data];
 ```
-bind events
+bind event
 ```objective-c
-// implement PomeloDelegate
-@interface Demo : NSObject <PomeloDelegate>
-
-// `onChat` will be emited when the server side push a message which route is `onChat`
-- (void) onChat:(NSDictionary *) data
-{
-    // do something with data
-}
-@end
+[pomelo onRoute:@"onChat" withCallback:^(NSDictionary *data){
+    // do something...
+}];
+```
+unbind event
+```objective-c
+[pomelo offRoute:@"onChat"];
 ```
 
 ##License
