@@ -1,6 +1,7 @@
 #Pomelo iOS client
 
 The iOS client libary for [Pomelo](https://github.com/NetEase/pomelo)
+A chat [demo](https://github.com/NetEase/pomelo-ioschat) for this libary.
 
 ##Dependencies
 * [socket.IO-objc](https://github.com/pkyeck/socket.IO-objc) (v0.3.0): A [Socket.IO](http://socket.io/) client for Objective-C, based on [SocketRocket](https://github.com/square/SocketRocket)
@@ -17,8 +18,11 @@ The iOS client libary for [Pomelo](https://github.com/NetEase/pomelo)
 ```objective-c
 - (id)initWithDelegate:(id<PomeloDelegate>)delegate;
 - (void)connectToHost:(NSString *)host onPort:(NSInteger)port;
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port withCallback:(PomeloCallback)callback;
 - (void)connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params;
 - (void)disconnect;
+- (void)disconnectWithCallback:(PomeloCallback)callback;
+
 - (void)requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
 - (void)notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
 - (void)onRoute:(NSString *)route withCallback:(PomeloCallback)callback;
