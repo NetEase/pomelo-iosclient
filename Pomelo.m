@@ -11,6 +11,9 @@
 #import "SocketIOJSONSerialization.h"
 #import "SocketIOPacket.h"
 
+static NSString const *_connectCallback = @"__connectCallback__";
+static NSString const *_disconnectCallback = @"__disconnectCallback__";
+
 @interface Pomelo (Private)
 - (void)sendMessageWithReqId:(NSInteger)reqId andRoute:(NSString *)route andMsg:(NSDictionary *)msg;
 - (void)processMessage:(NSDictionary *)msg;
@@ -36,6 +39,13 @@
 {
     [socketIO connectToHost:host onPort:port];
 }
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port withCallback:(PomeloCallback)callback;
+{
+    if (callback) {
+        [_callbacks setObject:callback forKey:_connectCallback];
+    }
+    [socketIO connectToHost:host onPort:port];
+}
 - (void)connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params
 {
     [socketIO connectToHost:host onPort:port withParams:params];
@@ -45,17 +55,35 @@
     [socketIO disconnect];
 }
 
+- (void)disconnectWithCallback:(PomeloCallback)callback
+{
+    if (callback) {
+        [_callbacks setObject:callback forKey:_disconnectCallback];
+    }
+    [socketIO disconnect];
+}
 # pragma mark -
 # pragma mark implement SocketIODelegate
 
 - (void) socketIODidConnect:(SocketIO *)socket
 {
+    PomeloCallback callback = [_callbacks objectForKey:_connectCallback];
+    if (callback != nil) {
+        callback(self);
+        [_callbacks removeObjectForKey:_connectCallback];
+    }
     if ([_delegate respondsToSelector:@selector(PomeloDidConnect:)]) {
         [_delegate PomeloDidConnect:self];
     }
 }
+
 - (void) socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
 {
+    PomeloCallback callback = [_callbacks objectForKey:_disconnectCallback];
+    if (callback != nil) {
+        callback(self);
+        [_callbacks removeObjectForKey:_disconnectCallback];
+    }
     if ([_delegate respondsToSelector:@selector(PomeloDidDisconnect:withError:)]) {
         [_delegate PomeloDidDisconnect:self withError:error];
     }
@@ -64,7 +92,6 @@
 - (void)socketIO:(SocketIO *)socket didReceiveMessage:(SocketIOPacket *)packet
 {
     id data = [packet dataAsJSON];
-    NSLog(@"receive, %@", data);
     if ([_delegate respondsToSelector:@selector(Pomelo:didReceiveMessage:)]) {
         [_delegate Pomelo:self didReceiveMessage:data];
     }

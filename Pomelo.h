@@ -32,8 +32,10 @@ typedef void(^PomeloCallback)(id callback);
 
 - (id)initWithDelegate:(id<PomeloDelegate>)delegate;
 - (void)connectToHost:(NSString *)host onPort:(NSInteger)port;
+- (void)connectToHost:(NSString *)host onPort:(NSInteger)port withCallback:(PomeloCallback)callback;
 - (void)connectToHost:(NSString *)host onPort:(NSInteger)port withParams:(NSDictionary *)params;
 - (void)disconnect;
+- (void)disconnectWithCallback:(PomeloCallback)callback;
 
 - (void)requestWithRoute:(NSString *)route andParams:(NSDictionary *)params andCallback:(PomeloCallback)callback;
 - (void)notifyWithRoute:(NSString *)route andParams:(NSDictionary *)params;
