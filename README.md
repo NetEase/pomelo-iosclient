@@ -1,8 +1,8 @@
 #Pomelo iOS client
 
-The iOS client libary for [Pomelo](https://github.com/NetEase/pomelo)
+The iOS client library for [Pomelo](https://github.com/NetEase/pomelo)
 
-A [demo](https://github.com/NetEase/pomelo-ioschat) exist for this libary.
+A [demo](https://github.com/NetEase/pomelo-ioschat) exists for this library.
 
 ##Dependencies
 * [socket.IO-objc](https://github.com/pkyeck/socket.IO-objc) (v0.3.0): A [Socket.IO](http://socket.io/) client for Objective-C, based on [SocketRocket](https://github.com/square/SocketRocket)
